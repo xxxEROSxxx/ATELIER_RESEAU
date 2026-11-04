@@ -35,18 +35,18 @@ sur la ligne `inet` se trouvent l'**adresse IP** et le **masque** (après le `/`
 
 | Information        | Valeur pour le client |
 | ------------------ | --------------------- |
-| Nom de l'interface | …                     |
-| Adresse MAC        | …                     |
-| Adresse IP         | …                     |
-| Masque (notation `/`) | …                  |
-| Adresse du réseau  | …                     |
+| Nom de l'interface |    eth0@if26          |
+| Adresse MAC        |  1a:26:3d:5c:98:2d    |
+| Adresse IP         |  172.20.1.50          |
+| Masque (notation `/`) |  /24               |
+| Adresse du réseau  |        172.20.1.0     |
 
 **Question A.2.** Le masque est `/24`. Combien de machines différentes peut-on placer dans ce réseau ?
 (Indice : le dernier nombre de l'adresse peut varier de 0 à 255, mais 2 valeurs sont réservées.)
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _254._
 
 ### Étape 2 — Ma passerelle
 
@@ -65,7 +65,7 @@ ip route
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _172.20.1.254 elle correspond au routeur._
 
 ---
 
@@ -104,7 +104,7 @@ eu besoin de cette information **avant** de pouvoir envoyer le ping ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _La ligne associe l’IP 172.20.1.2 à sa MAC : le client avait besoin de cette MAC pour construire la trame._
 
 ### Étape 5 — Joindre une machine d'un autre réseau
 
@@ -121,7 +121,7 @@ a-t-il appris la MAC ? Expliquez pourquoi, en vous aidant de la fiche théorique
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _Il a appris la MAC de 172.20.1.254, la passerelle, parce que 172.20.0.10 n’est pas dans son réseau : la trame part donc vers le routeur.._
 
 ---
 
@@ -141,7 +141,7 @@ cette différence ? (Indice : chaque routeur traversé diminue le TTL de 1.)
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _TTL = 64 pour 172.20.1.254 et 63 pour 172.20.0.10 : la réponse du serveur a traversé 1 routeur, qui a retiré 1 au TTL._
 
 ### Étape 7 — traceroute
 
@@ -158,7 +158,7 @@ Dessinez (en texte) le chemin suivi : `client → … → internet`.
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _2 sauts, et le premier est 172.20.1.254, le routeur.._
 
 ### Étape 8 — Le lab est isolé
 
@@ -172,7 +172,7 @@ ping -c 2 -W 2 8.8.8.8
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _le routeur (172.20.1.254) répond Destination Net Unreachable, car il n’a aucune route vers 8.8.8.8. Derrière lui, il n’y a que le réseau du lab, pas Internet._
 
 ---
 
@@ -182,11 +182,11 @@ ping -c 2 -W 2 8.8.8.8
 
 | Notion        | Explication en une phrase |
 | ------------- | ------------------------- |
-| Adresse IP    | …                         |
-| Adresse MAC   | …                         |
-| Passerelle    | …                         |
-| ARP           | …                         |
-| TTL           | …                         |
+| Adresse IP    | Identifie une machine sur un réseau |
+| Adresse MAC   | Adresse physique de la carte réseau d'une machine                       |
+| Passerelle    |Routeur qui permet de sortir de son réseau pour en joindre un autre                         |
+| ARP           | Trouve l'adresse MAC qui correspond à une adresse IP                          |
+| TTL           | compteur diminué de 1 à chaque routeur                     |
 
 **Question D.2.** Vrai ou faux ? Justifiez : « Pour envoyer un paquet à `172.20.0.10`, le client met
 dans la trame la MAC de `172.20.0.10`. »
