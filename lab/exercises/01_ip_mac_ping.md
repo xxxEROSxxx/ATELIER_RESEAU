@@ -193,7 +193,7 @@ dans la trame la MAC de `172.20.0.10`. »
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> _Faux : 172.20.0.10 est sur un autre réseau, donc le client met la MAC de la passerelle (172.20.1.254). L’IP de destination reste 172.20.0.10._
 
 ---
 
