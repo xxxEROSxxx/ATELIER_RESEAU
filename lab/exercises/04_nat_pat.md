@@ -61,14 +61,14 @@ docker logs --tail 3 lab_internet
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le serveur voit `FROM=172.20.0.254`. Ce n'est pas l'adresse du client (`172.20.1.196`), c'est l'interface **wan du routeur**.
 
 **Question A.2.** Les adresses `172.20.x.x`, `192.168.x.x` et `10.x.x.x` sont des **adresses privées**
 (voir la fiche). Pourquoi un vrai serveur sur Internet ne pourrait-il pas répondre à une adresse privée ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Les adresses privées ne sont pas routées sur Internet (des milliers de réseaux utilisent les mêmes) : la réponse ne saurait pas où aller.
 
 ---
 
@@ -111,28 +111,31 @@ tcp 6 119 TIME_WAIT src=172.20.1.50 dst=172.20.0.10 sport=52942 dport=80 src=172
 
 | Sens   | IP source | IP destination | Port source | Port destination |
 | ------ | --------- | -------------- | ----------- | ---------------- |
-| Aller  | …         | …              | …           | …                |
-| Retour | …         | …              | …           | …                |
+| Aller  | `172.20.1.196` | `172.20.0.10` | `48014` | `80` |
+| Retour | `172.20.0.10` | `172.20.0.254` | `80` | `48014` |
 
 Dans le sens **retour**, à quelle adresse le serveur répond-il ? Qui fait la traduction vers le client ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> ```
+> tcp 6 107 TIME_WAIT src=172.20.1.196 dst=172.20.0.10 sport=48014 dport=80 src=172.20.0.10 dst=172.20.0.254 sport=80 dport=48014 [ASSURED]
+> ```
+> Le serveur répond à **172.20.0.254** (le routeur). Le **routeur** retraduit vers le client grâce à sa table `conntrack`.
 
 **Question B.2.** Combien de lignes voyez-vous pour vos 3 requêtes ? Les **ports source** sont-ils
 identiques ? Pourquoi est-ce indispensable quand plusieurs PC partagent la même adresse publique ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> **3 lignes**, une par requête, avec **3 ports source différents** (48014, 48024, 48038). Le port permet au routeur de savoir à quel PC renvoyer chaque réponse.
 
 **Question B.3.** On parle de **PAT** (*Port Address Translation*) quand plusieurs machines partagent
 **une seule** IP publique grâce aux ports. Notre routeur fait-il du NAT simple ou du PAT ? Justifiez.
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Du **PAT** : tout le LAN sort avec la seule IP `172.20.0.254` (MASQUERADE), et les connexions sont distinguées par les ports.
 
 ---
 
@@ -173,14 +176,14 @@ docker logs --tail 3 lab_internet
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le `curl` échoue au bout de 5 s (`Connection timed out`). Aucune nouvelle ligne dans le journal du serveur web.
 
 **Question C.2.** Dans la capture côté WAN, quelle **IP source** porte le paquet `[S]` (SYN) qui sort ?
 Le paquet **aller** est bien parti : pourquoi la **réponse** ne revient-elle jamais au client ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le SYN sort avec l'IP **privée du client** (`172.20.1.196`), non traduite. Le client le renvoie 4 fois sans réponse : le serveur ne connaît pas de route vers ce réseau privé, sa réponse se perd.
 
 ### Étape 9 — Réparer
 
@@ -207,20 +210,20 @@ le serveur web **et** de sa réponse, en indiquant à quel moment l'adresse est 
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le client envoie sa requête à sa passerelle `172.20.1.254`. En sortant par `wan`, le routeur remplace l'IP source du client par la sienne (`172.20.0.254`) et note la traduction dans `conntrack`. Le serveur répond donc au routeur. Le routeur consulte sa table, remet l'IP du client en destination et lui renvoie la réponse.
 
 **Question D.2.** Chez vous, combien d'adresses IP publiques votre box possède-t-elle en général ?
 Combien d'appareils l'utilisent ? Quel mécanisme rend cela possible ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> **Une seule** IP publique, partagée par tous les appareils de la maison (PC, téléphones, TV…), grâce au **PAT**.
 
 **Question D.3.** Pourquoi le NAT a-t-il été inventé ? (Indice : combien existe-t-il d'adresses IPv4 au total ?)
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> IPv4 = 32 bits, soit environ **4,3 milliards** d'adresses : pas assez pour tous les appareils. Le NAT permet de partager une IP publique.
 
 ---
 
@@ -248,13 +251,13 @@ curl http://172.20.1.254:8080/whoami
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> C'est le **serveur web `172.20.0.10:80`** qui a répondu. **Les deux** sont traduits : la destination (DNAT `172.20.1.254:8080` → `172.20.0.10:80`) et la source (MASQUERADE en sortant par `wan`).
 
 **Question P.2.** Donnez un exemple de situation où vous auriez besoin d'une redirection de port chez vous.
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Rendre accessible depuis l'extérieur un serveur hébergé chez soi (serveur de jeu, NAS, caméra).
 
 🔀 Nettoyage : `iptables -t nat -D PREROUTING 1`
 
