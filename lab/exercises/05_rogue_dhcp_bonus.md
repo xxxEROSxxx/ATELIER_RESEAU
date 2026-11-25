@@ -36,7 +36,8 @@ DNS ce serveur donne-t-il aux clients ? Comparez avec `lab/dhcp-server/dnsmasq.c
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le faux serveur donne **`172.20.1.99`** (lui-même) comme passerelle **et** comme DNS, avec la plage `172.20.1.150`–`160` et un bail d'1 h.
+> Le vrai serveur donne la passerelle **`172.20.1.254`** (le routeur) et les DNS **`1.1.1.1`, `8.8.8.8`**, avec la plage `172.20.1.100`–`200` et un bail de 12 h.
 
 ---
 
@@ -68,14 +69,18 @@ De quels serveurs viennent-elles ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> **2 Offers** pour chaque demande :
+> - `172.20.1.99` (faux serveur) propose `172.20.1.156` avec la passerelle `172.20.1.99` ;
+> - `172.20.1.2` (vrai serveur) propose `172.20.1.196` avec la passerelle `172.20.1.254`.
 
 **Question B.2.** Quelle offre le client a-t-il acceptée (ligne `DHCPOFFER of … from …` et `ip route`) ?
 D'après vous, selon quel critère le client choisit-il ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Les 3 fois, le client a accepté l'offre du **faux serveur** : `DHCPOFFER of 172.20.1.156 from 172.20.1.99` et `default via 172.20.1.99`.
+> Le client prend **la première offre reçue**, sans vérifier qui l'envoie : DHCP n'authentifie pas les serveurs.
+> Le vrai serveur a même répondu `DHCPNAK`, mais le client a quand même accepté l'ACK du faux serveur.
 
 ---
 
@@ -92,7 +97,8 @@ curl -m 5 http://172.20.0.10/whoami
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Non : `curl: (28) Connection timed out after 5001 milliseconds`.
+> La passerelle du client est `172.20.1.99` (le faux serveur) au lieu de `172.20.1.254` (le vrai routeur). Le faux serveur ne fait pas suivre le trafic, donc la requête n'atteint jamais le site.
 
 **Question C.2.** Ici, le faux serveur ne fait pas suivre le trafic : le client perd simplement son accès.
 Un vrai attaquant ferait suivre le trafic **tout en le lisant**. Que pourrait-il voir ou modifier ?
@@ -100,7 +106,8 @@ Un vrai attaquant ferait suivre le trafic **tout en le lisant**. Que pourrait-il
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Tout le trafic du client passe par lui (attaque **Man-in-the-Middle**) : il peut lire les données non chiffrées (mots de passe en HTTP, contenus) et les modifier.
+> Comme il est aussi le **DNS**, il peut répondre une fausse IP pour un nom de site et renvoyer le client vers un faux site (hameçonnage).
 
 ---
 
@@ -128,14 +135,19 @@ dhclient -v eth0
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> ```
+> Surveillance des offres DHCP sur eth0 (Ctrl+C pour arrêter)...
+> OK     : offre du serveur autorisé 172.20.1.2
+> ALERTE : serveur DHCP NON autorisé détecté : 172.20.1.99
+> ```
 
 **Question D.2.** Expliquez avec vos mots ce que fait le script : quelle information lit-il dans
 chaque Offer, et comment décide-t-il de lever une alerte ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le script écoute le réseau avec `tshark` et garde seulement les **Offers** (type DHCP = 2). Dans chacune, il lit l'**adresse du serveur** (option 54).
+> Il la compare au seul serveur autorisé (`172.20.1.2`) : identique → `OK`, différente → `ALERTE`.
 
 **Question D.3.** Ce script **détecte** l'attaque, mais l'**empêche**-t-il ? Sur les vrais réseaux, les
 switchs proposent une protection appelée **DHCP Snooping** : seuls les ports déclarés « de confiance »
@@ -143,7 +155,8 @@ ont le droit d'envoyer des Offers. Expliquez pourquoi cette solution est plus ef
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Non, il **détecte** seulement : le client a quand même accepté l'offre du faux serveur.
+> Le **DHCP Snooping** bloque les Offers directement sur le switch : une Offer qui arrive par un port non déclaré de confiance est jetée. Elle n'atteint jamais les clients, donc l'attaque est **empêchée**, pas seulement signalée.
 
 ---
 
