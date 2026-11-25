@@ -47,7 +47,7 @@ ping -c 2 172.20.1.254
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> `ping: connect: Network is unreachable` : sans adresse IP, le client n'a ni réseau ni route, il ne peut rien envoyer.
 
 ---
 
@@ -89,7 +89,14 @@ Qui vous l'a donnée ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> ```
+> DHCPDISCOVER on eth0 to 255.255.255.255 port 67 interval 3
+> DHCPOFFER of 172.20.1.196 from 172.20.1.2
+> DHCPREQUEST for 172.20.1.196 on eth0 to 255.255.255.255 port 67
+> DHCPACK of 172.20.1.196 from 172.20.1.2
+> bound to 172.20.1.196 -- renewal in 19253 seconds.
+> ```
+> J'ai obtenu **172.20.1.196**, donnée par le serveur DHCP **172.20.1.2**.
 
 ### Étape 5 — Analyser les 4 messages
 
@@ -112,26 +119,26 @@ Qui vous l'a donnée ?
 
 | Étape       | IP source | IP destination    | MAC destination   | Type DHCP (opt 53) | Transaction ID |
 | ----------- | --------- | ----------------- | ----------------- | ------------------ | -------------- |
-| 1. Discover | `0.0.0.0` | `255.255.255.255` | …                 | …                  | …              |
-| 2. Offer    | …         | …                 | …                 | …                  | …              |
-| 3. Request  | …         | …                 | …                 | …                  | …              |
-| 4. ACK      | …         | …                 | …                 | …                  | …              |
+| 1. Discover | `0.0.0.0` | `255.255.255.255` | `ff:ff:ff:ff:ff:ff` | 1 (DISCOVER) | `0x6a979421` |
+| 2. Offer    | `172.20.1.2` | `172.20.1.196` | `2a:5d:5b:71:24:92` | 2 (OFFER) | `0x6a979421` |
+| 3. Request  | `0.0.0.0` | `255.255.255.255` | `ff:ff:ff:ff:ff:ff` | 3 (REQUEST) | `0x6a979421` |
+| 4. ACK      | `172.20.1.2` | `172.20.1.196` | `2a:5d:5b:71:24:92` | 5 (ACK) | `0x6a979421` |
 
 **Question B.3.** Dans le paquet **Offer** (n°2), relevez la configuration proposée par le serveur :
 
 | Information              | Option DHCP | Valeur |
 | ------------------------ | ----------- | ------ |
-| Adresse IP proposée      | (yiaddr)    | …      |
-| Masque de sous-réseau    | 1           | …      |
-| Passerelle (routeur)     | 3           | …      |
-| Serveurs DNS             | 6           | …      |
-| Durée du bail (secondes) | 51          | …      |
+| Adresse IP proposée      | (yiaddr)    | `172.20.1.196` |
+| Masque de sous-réseau    | 1           | `255.255.255.0` |
+| Passerelle (routeur)     | 3           | `172.20.1.254` |
+| Serveurs DNS             | 6           | `1.1.1.1`, `8.8.8.8` |
+| Durée du bail (secondes) | 51          | `43200` |
 
 Convertissez la durée du bail en heures.
 
 > 💬 **Votre réponse (conversion) :**
 >
-> _Remplacez ce texte par votre réponse._
+> 43200 ÷ 3600 = **12 heures**.
 
 ---
 
@@ -153,7 +160,7 @@ question B.3 ? Le ping vers le routeur fonctionne-t-il à nouveau ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Oui : `172.20.1.196/24` dans `ip addr`, `default via 172.20.1.254` dans `ip route`, `1.1.1.1` et `8.8.8.8` dans `resolv.conf`. Le ping vers le routeur fonctionne à nouveau.
 
 ### Étape 7 — Le point de vue du serveur
 
@@ -173,7 +180,7 @@ a-t-il associée à l'IP attribuée ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Les 4 étapes DORA apparaissent. Le serveur a associé l'IP **172.20.1.196** à la MAC **2a:5d:5b:71:24:92**.
 
 ---
 
@@ -183,28 +190,28 @@ a-t-il associée à l'IP attribuée ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le client n'a pas encore d'adresse IP, il utilise donc `0.0.0.0` (« aucune adresse »).
 
 **Question D.2.** Pourquoi le Discover est-il envoyé à `255.255.255.255` et à la MAC `ff:ff:ff:ff:ff:ff` ?
 Que signifient ces adresses ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Le client ne connaît pas encore le serveur DHCP, il envoie donc à tout le monde : `255.255.255.255` = broadcast IP, `ff:ff:ff:ff:ff:ff` = broadcast MAC.
 
 **Question D.3.** À quoi sert le **Transaction ID**, identique dans les 4 messages ?
 (Imaginez 30 PC qui démarrent en même temps sur le même réseau.)
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Il relie les 4 messages d'un même échange : avec 30 PC en même temps, chaque client reconnaît les réponses qui lui sont destinées.
 
 **Question D.4.** Que se passe-t-il quand le **bail expire** ? Pourquoi les baux ont-ils une durée
 limitée plutôt qu'infinie ?
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Si le bail n'est pas renouvelé, le client perd son adresse IP. Une durée limitée permet de récupérer les adresses des machines qui ne sont plus sur le réseau.
 
 ---
 
@@ -222,7 +229,7 @@ Quel message est envoyé par `dhclient -r` ? Obtenez-vous la même adresse ensui
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> `dhclient -r` envoie un **DHCPRELEASE**. On récupère la même adresse, car le serveur se souvient de l'IP attribuée à cette MAC.
 
 **P.2 — Panne du serveur DHCP.** 🖥️ Arrêtez le serveur, puis 💻 redemandez une adresse :
 
@@ -243,7 +250,7 @@ Que se passe-t-il ? Quelles conséquences dans une entreprise si le serveur DHCP
 
 > 💬 **Votre réponse :**
 >
-> _Remplacez ce texte par votre réponse._
+> Aucune réponse (`No DHCPOFFERS received`), le client reste sans adresse IP. En entreprise, les postes qui démarrent ne peuvent plus se connecter au réseau.
 
 ---
 
